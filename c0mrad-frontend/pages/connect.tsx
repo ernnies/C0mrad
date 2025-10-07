@@ -1,4 +1,3 @@
-// pages/connect.tsx
 export default function Connect() {
   return (
     <div className="min-h-screen bg-gray-900 text-white p-4 flex flex-col items-center justify-center">
