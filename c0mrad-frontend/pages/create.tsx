@@ -35,26 +35,58 @@ export default function Create() {
   });
   const [progress, setProgress] = useState(0);
   const [tourActive, setTourActive] = useState(false); // Kept for tour functionality
+  const [rootHash, setRootHash] = useState<string | null>(null); // Track the uploaded workflow's root hash
 
-  const handleSave = () => {
-    const saveData = { workflow, timestamp: new Date().toISOString() };
-    alert(`Workflow saved: ${JSON.stringify(saveData)}`);
-    setHistory([...history, JSON.stringify(saveData)]);
-    updateWorkflows();
-    setProgress(100);
-    setTimeout(() => setProgress(0), 1000);
+  const handleSave = async () => {
+    const saveData = { name: activeWorkflow, steps: workflow, timestamp: new Date().toISOString() };
+    setProgress(0);
+    try {
+      const response = await fetch('http://localhost:3001/api/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ workflow: saveData }),
+      });
+      const result = await response.json();
+      if (result.rootHash) {
+        setRootHash(result.rootHash);
+        alert(`Workflow saved to 0G Storage! Root Hash: ${result.rootHash}`);
+        setHistory([...history, `Saved to 0G: ${result.txHash || 'Transaction pending'}`]);
+        updateWorkflows();
+      }
+      setProgress(100);
+    } catch (error) {
+      alert(`Save error: ${(error as Error).message}`);
+      setProgress(0);
+    } finally {
+      setTimeout(() => setProgress(0), 1000);
+    }
   };
 
-  const handleExport = () => {
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(workflow));
-    const downloadAnchorNode = document.createElement("a");
-    downloadAnchorNode.setAttribute("href", dataStr);
-    downloadAnchorNode.setAttribute("download", "workflow.json");
-    document.body.appendChild(downloadAnchorNode);
-    downloadAnchorNode.click();
-    downloadAnchorNode.remove();
-    setProgress(100);
-    setTimeout(() => setProgress(0), 1000);
+  const handleExport = async () => {
+    if (!rootHash) {
+      alert("No workflow saved yet. Please save a workflow first.");
+      return;
+    }
+    setProgress(0);
+    try {
+      const response = await fetch(`http://localhost:3001/api/download/${rootHash}`);
+      if (!response.ok) throw new Error('Download failed');
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'workflow.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      setProgress(100);
+    } catch (error) {
+      alert(`Export error: ${(error as Error).message}`);
+      setProgress(0);
+    } finally {
+      setTimeout(() => setProgress(0), 1000);
+    }
   };
 
   const applyTemplate = (templateName: string) => {
