@@ -1,4 +1,3 @@
-// pages/create.tsx
 import { useState, useEffect } from "react";
 import DragDropBuilder from "../components/DragDropBuilder";
 import { Chart as ChartJS, BarElement, CategoryScale, LinearScale, Tooltip, Legend } from "chart.js";
@@ -7,11 +6,12 @@ import Shepherd from "shepherd.js"; // For interactive tutorials (npm install sh
 
 ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend);
 
+// Define actions locally to match DragDropBuilder.tsx
+const actions = ["Buy Token", "Sell Token", "Set Price Trigger", "Stake", "Unstake"];
+
 export default function Create() {
   const [workflow, setWorkflow] = useState<string[]>([]);
   const [history, setHistory] = useState<string[]>([]);
-  const [template, setTemplate] = useState<string | null>(null);
-  const [isCollaborating, setIsCollaborating] = useState(false);
   const [collaboratorId, setCollaboratorId] = useState("");
   const [workflows, setWorkflows] = useState<{ name: string; steps: string[] }[]>([{ name: "Default", steps: [] }]);
   const [activeWorkflow, setActiveWorkflow] = useState("Default");
@@ -26,7 +26,6 @@ export default function Create() {
   const [schedule, setSchedule] = useState<string>("");
   const [errorRecovery, setErrorRecovery] = useState<"retry" | "skip" | null>(null);
   const [customAction, setCustomAction] = useState("");
-  const [tourActive, setTourActive] = useState(false);
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [voiceCommand, setVoiceCommand] = useState("");
   const [exportedCode, setExportedCode] = useState<string | null>(null);
@@ -35,6 +34,7 @@ export default function Create() {
     inputValidation: false,
   });
   const [progress, setProgress] = useState(0);
+  const [tourActive, setTourActive] = useState(false); // Kept for tour functionality
 
   const handleSave = () => {
     const saveData = { workflow, timestamp: new Date().toISOString() };
@@ -63,14 +63,12 @@ export default function Create() {
       "Yield Farming": ["Set Price Trigger", "Buy Token", "Stake"],
     };
     setWorkflow(templates[templateName as keyof typeof templates] || []);
-    setTemplate(templateName);
     updateWorkflows();
   };
 
   const startCollaboration = () => {
     if (collaboratorId) {
       alert(`Collaboration started with ID: ${collaboratorId}`);
-      setIsCollaborating(true);
     }
   };
 
@@ -155,7 +153,7 @@ export default function Create() {
       buttons: [{ text: "Finish", action: tour.complete }],
     });
     tour.start();
-    setTourActive(true);
+    setTourActive(true); // Use the state to track tour status
   };
 
   const exportToCode = () => {

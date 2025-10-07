@@ -7,9 +7,24 @@ import {
   Title,
   Tooltip,
   Legend,
+  ChartOptions,
 } from "chart.js";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+
+// Explicitly type the options to match Chart.js Bar chart options
+const options: ChartOptions<"bar"> = {
+  responsive: true,
+  plugins: {
+    legend: {
+      position: "top" as const, // Ensure type safety with literal type
+    },
+    title: {
+      display: true,
+      text: "Portfolio Overview",
+    },
+  },
+};
 
 const Dashboard = () => {
   const data = {
@@ -21,11 +36,6 @@ const Dashboard = () => {
         backgroundColor: "rgba(59, 130, 246, 0.5)",
       },
     ],
-  };
-
-  const options = {
-    responsive: true,
-    plugins: { legend: { position: "top" }, title: { display: true, text: "Portfolio Overview" } },
   };
 
   return (

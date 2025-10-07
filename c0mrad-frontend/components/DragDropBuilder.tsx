@@ -1,4 +1,3 @@
-// components/DragDropBuilder.tsx
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { useState, useRef } from "react";
 
@@ -14,7 +13,7 @@ const DragDropBuilder = ({ workflow, setWorkflow, marketData }: DragDropBuilderP
   const [validationMessage, setValidationMessage] = useState<string | null>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
 
-  const onDragEnd = (result: any) => {
+  const onDragEnd = (result: any) => { // This line (17) is the likely culprit
     const { source, destination } = result;
     if (!destination) return;
     const items = Array.from(workflow);
@@ -64,7 +63,6 @@ const DragDropBuilder = ({ workflow, setWorkflow, marketData }: DragDropBuilderP
 
   const handleTouchStart = (e: React.TouchEvent, action: string) => {
     if (e.touches.length === 2) {
-      // Pinch to zoom (mock)
       if (canvasRef.current) canvasRef.current.style.transform = "scale(1.2)";
     } else if (e.touches.length === 1) {
       handleCustomize(action);
@@ -73,7 +71,6 @@ const DragDropBuilder = ({ workflow, setWorkflow, marketData }: DragDropBuilderP
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (e.touches.length === 1 && canvasRef.current) {
-      // Swipe to delete (mock)
       const touch = e.touches[0];
       if (touch.clientX < 50) {
         setWorkflow(workflow.filter((_, i) => i !== 0));

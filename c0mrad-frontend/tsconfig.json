@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "baseUrl": ".",  //Resolve paths relative to the project root
+    "baseUrl": ".",  
     "target": "es5",
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
