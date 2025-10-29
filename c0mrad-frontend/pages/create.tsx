@@ -2,11 +2,12 @@ import { useState, useEffect } from "react";
 import DragDropBuilder from "../components/DragDropBuilder";
 import { Chart as ChartJS, BarElement, CategoryScale, LinearScale, Tooltip, Legend } from "chart.js";
 import { Bar } from "react-chartjs-2";
-import Shepherd from "shepherd.js"; // For interactive tutorials (npm install shepherd.js)
+import Shepherd from "shepherd.js"; // For interactive tutorials
+import PDFDocument from "pdfkit"; // For PDF reporting (npm install pdfkit)
+import fs from "fs"; // Note: Use server-side for file generation in backend
 
 ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend);
 
-// Define actions locally to match DragDropBuilder.tsx
 const actions = ["Buy Token", "Sell Token", "Set Price Trigger", "Stake", "Unstake"];
 
 export default function Create() {
@@ -34,8 +35,10 @@ export default function Create() {
     inputValidation: false,
   });
   const [progress, setProgress] = useState(0);
-  const [tourActive, setTourActive] = useState(false); // Kept for tour functionality
-  const [rootHash, setRootHash] = useState<string | null>(null); // Track the uploaded workflow's root hash
+  const [tourActive, setTourActive] = useState(false);
+  const [rootHash, setRootHash] = useState<string | null>(null);
+  const [sustainabilityScore, setSustainabilityScore] = useState<number>(0); // For Sustainability Metrics
+  const [learningProgress, setLearningProgress] = useState<{ [key: string]: boolean }>({}); // For Gamified Learning
 
   const handleSave = async () => {
     const saveData = { name: activeWorkflow, steps: workflow, timestamp: new Date().toISOString() };
@@ -89,6 +92,43 @@ export default function Create() {
     }
   };
 
+  const handleReport = async () => {
+    setProgress(0);
+    try {
+      const response = await fetch('http://localhost:3001/api/report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ workflow, performanceData }),
+      });
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'workflow-report.pdf';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      setProgress(100);
+    } catch (error) {
+      alert(`Report error: ${(error as Error).message}`);
+      setProgress(0);
+    } finally {
+      setTimeout(() => setProgress(0), 1000);
+    }
+  };
+
+  const updateSustainability = () => {
+    const score = workflow.length * 10 - (marketData["Token A"] / 100); // Mock calculation
+    setSustainabilityScore(Math.max(0, Math.min(100, score)));
+  };
+
+  const completeChallenge = (challenge: string) => {
+    setLearningProgress((prev) => ({ ...prev, [challenge]: true }));
+    alert(`Completed ${challenge}! Earned 10 tokens.`);
+  };
+
+  // Existing functions (applyTemplate, startCollaboration, etc.) remain unchanged
   const applyTemplate = (templateName: string) => {
     const templates = {
       "Basic Trading": ["Buy Token", "Set Price Trigger", "Sell Token"],
@@ -137,6 +177,7 @@ export default function Create() {
   const updateWorkflows = () => {
     setWorkflows(workflows.map((w) => (w.name === activeWorkflow ? { ...w, steps: workflow } : w)));
     setUndoStack([...undoStack, workflow]);
+    updateSustainability(); // Update sustainability on workflow change
   };
 
   const switchWorkflow = (name: string) => {
@@ -185,7 +226,7 @@ export default function Create() {
       buttons: [{ text: "Finish", action: tour.complete }],
     });
     tour.start();
-    setTourActive(true); // Use the state to track tour status
+    setTourActive(true);
   };
 
   const exportToCode = () => {
@@ -208,7 +249,7 @@ export default function Create() {
   };
 
   const previewTransaction = () => {
-    const gasFee = workflow.length * 0.01; // Mock gas fee
+    const gasFee = workflow.length * 0.01;
     alert(`Estimated gas fee: ${gasFee} ETH`);
   };
 
@@ -242,9 +283,20 @@ export default function Create() {
 
   return (
     <div
-      className={`min-h-screen text-gray-800 font-sans ${theme === "dark" ? "bg-gray-900 text-gray-200" : "bg-gradient-to-br from-gray-50 via-white to-blue-50"}`}
+      className={`min-h-screen text-gray-800 font-sans ${theme === "dark" ? "bg-gray-900 text-gray-200" : "bg-gradient-to-br from-gray-50 via-white to-blue-50"} touch-pan-y`}
+      onTouchMove={(e) => {
+        if (e.touches.length === 2) {
+          const canvas = document.querySelector(".canvas-panel");
+          if (canvas) canvas.style.transform = "scale(1.2)";
+        } else if (e.touches.length === 1 && e.touches[0].clientX < 50) {
+          setWorkflow(workflow.slice(1));
+        }
+      }}
+      onTouchEnd={() => {
+        const canvas = document.querySelector(".canvas-panel");
+        if (canvas) canvas.style.transform = "scale(1)";
+      }}
     >
-      {/* Header */}
       <header className={`bg-white shadow-md py-4 ${theme === "dark" ? "bg-gray-800" : ""}`}>
         <div className="container mx-auto px-4 flex justify-between items-center">
           <h1 className="text-2xl font-semibold text-blue-700">Create Your DeFi Workflow</h1>
@@ -263,28 +315,20 @@ export default function Create() {
               className={`p-2 border rounded ${theme === "dark" ? "bg-gray-700 text-gray-200 border-gray-600" : "text-gray-700"}`}
             >
               {workflows.map((w) => (
-                <option key={w.name} value={w.name}>
-                  {w.name}
-                </option>
+                <option key={w.name} value={w.name}>{w.name}</option>
               ))}
             </select>
-            <button
-              onClick={addWorkflow}
-              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-            >
+            <button onClick={addWorkflow} className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
               New Workflow
             </button>
-            <button
-              onClick={handleSave}
-              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-            >
+            <button onClick={handleSave} className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
               Save
             </button>
-            <button
-              onClick={handleExport}
-              className="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400"
-            >
+            <button onClick={handleExport} className="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400">
               Export
+            </button>
+            <button onClick={handleReport} className="bg-teal-600 text-white px-4 py-2 rounded hover:bg-teal-700">
+              Generate Report
             </button>
             <input
               type="text"
@@ -300,10 +344,7 @@ export default function Create() {
             >
               Collaborate
             </button>
-            <button
-              onClick={simulateWorkflow}
-              className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700"
-            >
+            <button onClick={simulateWorkflow} className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700">
               Simulate
             </button>
             <button
@@ -355,16 +396,10 @@ export default function Create() {
             >
               Add Custom
             </button>
-            <button
-              onClick={startTour}
-              className="bg-teal-600 text-white px-4 py-2 rounded hover:bg-teal-700"
-            >
+            <button onClick={startTour} className="bg-teal-600 text-white px-4 py-2 rounded hover:bg-teal-700">
               Start Tour
             </button>
-            <button
-              onClick={toggleTheme}
-              className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
-            >
+            <button onClick={toggleTheme} className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700">
               Toggle Theme
             </button>
             <input
@@ -385,7 +420,6 @@ export default function Create() {
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="container mx-auto px-4 py-12">
         <div className="bg-white p-6 rounded-lg shadow-md mb-6">
           <h2 className="text-xl font-semibold text-blue-700 mb-4">Instructions</h2>
@@ -415,7 +449,7 @@ export default function Create() {
                       : "Add actions to see a preview."}
                   </p>
                 ) : (
-                  <div className="text-base text-gray-700">
+                  <div className="text-base text-gray-700 canvas-panel">
                     {workflow.map((item, index) => (
                       <div key={index} className="flex items-center mb-2">
                         <span className="bg-blue-100 p-2 rounded">{item}</span>
@@ -491,15 +525,41 @@ export default function Create() {
                   </li>
                 </ul>
               </div>
+              <div className="bg-white p-6 rounded-lg shadow-md mb-6">
+                <h2 className="text-xl font-semibold text-blue-700 mb-4">Sustainability Metrics</h2>
+                <p className="text-base text-gray-700">Score: {sustainabilityScore}/100</p>
+                <button
+                  onClick={updateSustainability}
+                  className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 mt-2"
+                >
+                  Recalculate
+                </button>
+              </div>
+              <div className="bg-white p-6 rounded-lg shadow-md mb-6">
+                <h2 className="text-xl font-semibold text-blue-700 mb-4">Learning Challenges</h2>
+                <ul className="text-base text-gray-700 list-disc pl-6 space-y-2">
+                  {["Build a Trading Workflow", "Simulate a Yield Farm"].map((challenge) => (
+                    <li key={challenge}>
+                      {challenge}{" "}
+                      {!learningProgress[challenge] && (
+                        <button
+                          onClick={() => completeChallenge(challenge)}
+                          className="bg-yellow-600 text-white px-2 py-1 rounded hover:bg-yellow-700"
+                        >
+                          Complete
+                        </button>
+                      )}
+                      {learningProgress[challenge] && <span className="text-green-600">Completed!</span>}
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
             {progress > 0 && (
               <div className="bg-white p-6 rounded-lg shadow-md mb-6">
                 <h2 className="text-xl font-semibold text-blue-700 mb-4">Progress</h2>
                 <div className="w-full bg-gray-200 rounded-full h-2.5">
-                  <div
-                    className="bg-blue-600 h-2.5 rounded-full"
-                    style={{ width: `${progress}%` }}
-                  ></div>
+                  <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${progress}%` }}></div>
                 </div>
                 <p className="text-sm text-gray-700 mt-2">{progress}%</p>
               </div>
