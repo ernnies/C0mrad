@@ -1,0 +1,48 @@
+{
+  "name": "c0mrad-contracts",
+  "version": "1.0.0",
+  "description": "Smart contracts for C0mrad DeFi Workflow Automation Platform",
+  "author": "C0mrad Team",
+  "license": "MIT",
+  "scripts": {
+    "compile": "hardhat compile",
+    "clean": "hardhat clean",
+    "test": "hardhat test",
+    "test:unit": "hardhat test test/unit/*.test.js",
+    "test:integration": "hardhat test test/integration/*.test.js",
+    "test:fuzz": "hardhat test test/fuzz/*.fuzz.js",
+    "coverage": "hardhat coverage",
+    "size": "hardhat size-contracts",
+
+    "deploy:core": "hardhat run scripts/deploy/deployCore.js --network zeroGTestnet",
+    "deploy:governance": "hardhat run scripts/deploy/deployGovernance.js --network zeroGTestnet",
+    "deploy:rwa": "hardhat run scripts/deploy/deployRWA.js --network zeroGTestnet",
+    "deploy:all": "hardhat run scripts/deploy/deployAll.js --network zeroGTestnet",
+
+    "verify:core": "hardhat verify --network zeroGTestnet",
+    "verify:all": "hardhat run scripts/utils/verify.js --network zeroGTestnet",
+
+    "node": "hardhat node",
+    "console": "hardhat console --network zeroGTestnet"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "@nomicfoundation/hardhat-chai-matchers": "^2.0.0",
+    "@nomicfoundation/hardhat-ethers": "^3.0.0",
+    "@nomicfoundation/hardhat-network-helpers": "^1.0.0",
+    "@nomicfoundation/hardhat-verify": "^2.0.0",
+    "@openzeppelin/hardhat-upgrades": "^3.0.0",
+    "@typechain/ethers-v6": "^0.5.0",
+    "@typechain/hardhat": "^9.0.0",
+    "chai": "^4.3.7",
+    "dotenv": "^16.4.5",
+    "ethers": "^6.11.0",
+    "hardhat": "^2.22.0",
+    "hardhat-gas-reporter": "^1.0.9",
+    "solidity-coverage": "^0.8.5"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.0.2",
+    "@openzeppelin/contracts-upgradeable": "^5.0.2"
+  }
+}
