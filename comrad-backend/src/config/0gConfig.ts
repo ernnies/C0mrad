@@ -1,4 +1,3 @@
-// src/config/0gConfig.ts
 import { Indexer } from "@0glabs/0g-ts-sdk";
 import { ethers } from "ethers";
 import * as dotenv from "dotenv";

@@ -1,7 +1,15 @@
-````markdown
 # C0mrad - No-Code DeFi Automation App
 
-Welcome to **C0mrad**, a revolutionary no-code, drag-and-drop decentralized application (DApp) built on 0G’s modular Layer 1 blockchain. C0mrad empowers users to create sophisticated crypto trading and DeFi automation workflows effortlessly, leveraging decentralized AI and real-time analytics. This README provides an overview, setup instructions, and roadmap for this innovative project.
+Welcome to **C0mrad**, a revolutionary no-code, drag-and-drop decentralized application (DApp) built on 0G’s modular Layer 1 blockchain. C0mrad empowers users to create sophisticated crypto trading and DeFi automation workflows effortlessly, leveraging decentralized AI and real-time analytics. 
+
+The deployment of key contracts—C0mradToken at 0x03A1a836FAEc7Dc83D39AaC91283fe42230b1835 (current version) and 0xd7d814043bf089B3AbdB00448a2Cd2fAf98697CA (earlier version), then C0mradCore Proxy at 0x55a4aD8A46F2B204e74F5D5861a6eAD8ccf89b08. 
+
+The root hash of the uploaded file based on the workflow data "Test Workflow" with steps ["Buy Token", "Sell Token"] 0x9f0c5d0bb80a68e872c8bd000a8803efbdd5a3ba991e29fb0e4a963f2d37c00f. Simulating 0G Storage's verification process.
+
+Key features include AI-driven risk assessments, RWA tokenization, flash loan simulations, and a gamified learning module. Our backend (Express.js) integrates with 0G Storage for workflow NFTs, while the Next.js frontend offers a drag-and-drop interface.
+
+
+This README provides an overview, setup instructions, and roadmap for this innovative project.
 
 - **Repository**: [https://github.com/ernnies/C0mrad](https://github.com/ernnies/C0mrad)  
 - **Author**: ernnies  
